@@ -1,0 +1,29 @@
+# Python Virtual Environment and Caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environment variables
+
+venv/
+.venv/
+env/
+
+# Data
+data/raw/
+data/processed/
+
+# Models and Artifacts
+*.pkl
+*.pt
+*.bin
+models/
+
+# OS and IDE
+.DS_Store
+.vscode/
+.idea/
+
+
