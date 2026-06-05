@@ -69,4 +69,5 @@ Do **not** commit data or model artifacts — `data/raw/`, `data/processed/`, an
 - **Notebooks:** Clear outputs before committing to keep diffs small.
 - **Commits:** Write concise, present-tense messages (e.g. "Add WildGuardMix loader").
 - **Imports:** Keep `src/` modules importable and free of side effects at import time.
+- Delete branch when complete
 
