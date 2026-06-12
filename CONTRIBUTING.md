@@ -18,6 +18,8 @@ Hello, trying to keep it simple here and learn some best practices along the way
 
 Never commit directly to main. Every feature or fix gets its own branch, gets reviewed via a Pull Request, then merges into main.
 
+**Steps**
+
 * Before making any changes, sync your local main with the remote (NEVER skip this or you may run into merge conflicts later on)
 
 ```bash
@@ -47,7 +49,7 @@ Never commit directly to main. Every feature or fix gets its own branch, gets re
 
 * Visit GitHub and open a pull request
 
-    Pull requests allow the team to review your changes before integrating them into the main branch. In the comment box you can tag reviewers and leave a description of the changes you made. GitHub will show reviewers every line of code you changed. After discussing with the team, make any requested changes, then push again to update the PR.
+   Pull requests allow the team to review your changes before integrating them into the main branch. In the comment box you can tag reviewers and leave a description of the changes you made. GitHub will show reviewers every line of code you changed. After discussing with the team, make any requested changes, then push again to update the PR.
 
 * Approve the pull request
 
