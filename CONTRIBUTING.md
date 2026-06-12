@@ -16,41 +16,61 @@ Hello, trying to keep it simple here and learn some best practices along the way
 
 3. Create a branch for your work:
 
-   ```bash
-   git checkout -b your-feature-name
-   ```
+Never commit directly to main. Every feature or fix gets its own branch, gets reviewed via a Pull Request, then merges into main.
 
-4. Make your changes (see [Where things go](#where-things-go) and [Conventions](#conventions) below), then run any relevant scripts/notebooks to confirm your change works. Stage and commit your work:
+* Before making any changes, sync your local main with the remote (NEVER skip this or you may run into merge conflicts later on)
 
-   ```bash
-   git add <files>
-   git commit -m "Add WildGuardMix loader"
-   ```
+```bash
+    git checkout main
+    git fetch origin
+    git reset --hard origin/main
+```
 
-5. Make sure your branch is up to date with `main`, then push your branch:
+* When you are ready to make a change to the code, create new branch (this code switches you to the newly created branch automatically)
 
-   ```bash
-   git fetch origin
-   git rebase origin/main
-   git push -u origin your-feature-name
-   ```
+```bash
+    git checkout -b <branch name>
+```
 
-   If you rebase again after this first push, the branch has diverged from the remote, so use `git push --force-with-lease`.
+* Do your work and commit
 
-6. Open a pull request with a short description of what changed and why:
+```bash
+    git add <file>
+    git commit -m "description"
+```
 
-   ```bash
-   gh pr create --fill
-   ```
+* Push the branch to GitHub
 
-7. Wait for **at least one approving review** before merging — anyone can review. Address any comments by pushing follow-up commits, then merge once you have that approval and all checks pass:
+```bash
+    git push -u origin <branch name>
+```
 
-   ```bash
-   git add <files>   # only needed if you added new files
-   git commit -m "Address review comments"
-   git push
-   gh pr merge --squash
-   ```
+* Visit GitHub and open a pull request
+
+    Pull requests allow the team to review your changes before integrating them into the main branch. In the comment box you can tag reviewers and leave a description of the changes you made. GitHub will show reviewers every line of code you changed. After discussing with the team, make any requested changes, then push again to update the PR.
+
+* Approve the pull request
+
+    Someone on the team will have to be the one to officially accept the changes. Communicate with the team to decide who this will be.
+
+    To learn more about pull requests, visit [this link.](https://github.blog/developer-skills/github/beginners-guide-to-github-creating-a-pull-request/)
+
+* After the PR is approved and merged, clean up locally
+
+```bash
+    git checkout main
+    git pull
+    git branch -d <branch name>
+```
+
+The final three commands switch back to main, pull down the newly merged changes, then `git branch -d` deletes the feature branch since its work is now in main. The `-d` flag stands for delete — it won't delete unless the branch has already been merged, so it's safe to run.
+
+### Key Points
+
+- Multiple people can work simultaneously on separate branches without interfering with each other.
+- Pull Requests are for discussion, not just merging — open one early if you need feedback before you're done.
+- `main` should always be stable and deployable.
+- Start a new branch for each new piece of work, repeating from Step 1.
 
 ## Where things go
 
