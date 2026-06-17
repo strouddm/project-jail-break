@@ -11,7 +11,7 @@ Build a classifier to flag harmful / jailbreak-style prompts before they reach a
 ```
 proj-jail-break/
 ├── README.md            # project overview + data-download instructions
-├── requirements.txt     # pandas, scikit-learn, xgboost, transformers, torch, datasets, huggingface_hub
+├── requirements.txt     # pandas, scikit-learn, etc.
 ├── .gitignore           # ignores venv, caches, data/raw, data/processed, model artifacts (*.pkl/*.pt/*.bin)
 ├── data/
 │   ├── raw/             # gitignored — three empty dataset dirs staged:
@@ -78,23 +78,26 @@ pip install -r requirements.txt
         ```python 
         from huggingface_hub import snapshot_download
 
+        # Add WildGuardMix
         snapshot_download(
         repo_id="allenai/wildguardmix",
         repo_type="dataset",
         local_dir="data/raw/wildguardmix",)
+
+        # SafeDialBench
+        snapshot_download(
+        repo_id="HongyeCao/SafeDialBench",
+        repo_type="dataset",
+        local_dir="data/raw/safedialbench",)
+
+        # MultiBreak
+        snapshot_download(
+        repo_id="microsoft/MultiBreak",
+        repo_type="dataset",
+        local_dir="data/raw/multibreak",)
+
         ```
-
-4. Add the SafeDialBench dataset to `data/raw/safedialbench`
-
-    1. Clone the repo:
-
-        ```bash
-        git clone https://github.com/drivetosouth/SafeDialBench-Dataset data/raw/safedialbench
-        ```
-
-5. Add the MultiBreak dataset to `data/raw/multibreak`
-
-    > [TODO] Source dataset still needs to be located.
+        * Of note, there is a script available at /scripts/download_datasets.py built to do this
 
 ## Notes
 
