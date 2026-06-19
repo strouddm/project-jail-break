@@ -1,7 +1,13 @@
 pandas
+pyarrow
 scikit-learn
 xgboost
 transformers
 torch
 datasets
 huggingface_hub
+
+# EDA / notebooks
+ipykernel
+matplotlib
+seaborn
