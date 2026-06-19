@@ -17,7 +17,7 @@ proj-jail-break/
 │   ├── raw/             # gitignored — three empty dataset dirs staged:
 │   │   ├── wildguardmix/    # ~92K single-turn prompts (primary, benign+harmful)
 │   │   ├── safedialbench/   # ~4K multi-turn attacks
-│   │   └── multibreak/      # ~10K adversarial jailbreaks
+│   │   └── lmsys-chat/      # ~1M real-world conversations
 │   └── processed/       # gitignored — unified/cleaned output
 ├── notebooks/           # EDA + experiments (empty)
 ├── src/                 # flat Python modules: data prep, features, models, eval (empty)
@@ -35,8 +35,8 @@ Empty tracked directories get a `.gitkeep`: `notebooks/`, `src/`, `scripts/`, `r
 This project aggregates and standardizes data from three primary datasets to create a unified, multi-category classification resource:
 
 **WildGuardMix** ~92K single-turn prompts - Primary source; provides benign and harmful examples.
-**MultiBreak** ~10K adversarial prompts - Adversarial, jailbreak-style tactics. 
 **SafeDialBench** ~4K multi-turn attacks - Multi-turn conversational threats.
+**LMSYS-Chat-1m** ~1M Real-world conversations 
 
 ---
 
@@ -57,13 +57,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Add the WildGuardMix dataset to `data/raw/wildguardmix`
+3. Download the datasets into `data/raw/`
+
+    All three datasets download in a single step. Two of them are **gated** on Hugging Face, so you must accept their terms (while logged in) before your token can pull them. Access is granted automatically — there's no approval wait.
 
     1. Install prerequisites: `pip install datasets huggingface_hub`
 
     2. Create a Hugging Face account (or log in): https://huggingface.co/join
 
-    3. Open the dataset page and accept the terms: https://huggingface.co/datasets/allenai/wildguardmix
+    3. Accept the terms on each gated dataset page (one click each):
+
+        - WildGuardMix — https://huggingface.co/datasets/allenai/wildguardmix
+        - LMSYS-Chat-1M — https://huggingface.co/datasets/lmsys/lmsys-chat-1m
+        - (SafeDialBench is open — no terms required: https://huggingface.co/datasets/HongyeCao/SafeDialBench)
 
     4. Create an access token: Settings -> Access Tokens -> New Token
 
@@ -73,12 +79,18 @@ pip install -r requirements.txt
         huggingface-cli login   # paste your token when prompted
         ```
 
-    6. Download the files into the local directory
+    6. Download all three datasets. The simplest way is to run the script:
 
-        ```python 
+        ```bash
+        python scripts/download_datasets.py
+        ```
+
+        It runs the equivalent of:
+
+        ```python
         from huggingface_hub import snapshot_download
 
-        # Add WildGuardMix
+        # WildGuardMix
         snapshot_download(
         repo_id="allenai/wildguardmix",
         repo_type="dataset",
@@ -90,14 +102,12 @@ pip install -r requirements.txt
         repo_type="dataset",
         local_dir="data/raw/safedialbench",)
 
-        # MultiBreak
+        # LMSYS-Chat-1M
         snapshot_download(
-        repo_id="microsoft/MultiBreak",
+        repo_id="lmsys/lmsys-chat-1m",
         repo_type="dataset",
-        local_dir="data/raw/multibreak",)
-
+        local_dir="data/raw/lmsys-chat",)
         ```
-        * Of note, there is a script available at /scripts/download_datasets.py built to do this
 
 ## Notes
 
@@ -108,6 +118,6 @@ The data lives in these directories (gitignored)
 data/raw/
 ├── wildguardmix/
 ├── safedialbench/
-└── multibreak/
+└── lmsys-chat/
 ```
 
