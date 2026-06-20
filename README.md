@@ -58,13 +58,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Add the WildGuardMix dataset to `data/raw/wildguardmix`
+3. Download the datasets into `data/raw/`
+
+    All three datasets download in a single step. Two of them are **gated** on Hugging Face, so you must accept their terms (while logged in) before your token can pull them. Access is granted automatically — there's no approval wait.
 
     1. Install prerequisites: `pip install datasets huggingface_hub`
 
     2. Create a Hugging Face account (or log in): https://huggingface.co/join
 
-    3. Open the dataset page and accept the terms: https://huggingface.co/datasets/allenai/wildguardmix
+    3. Accept the terms on each gated dataset page (one click each):
+
+        - WildGuardMix — https://huggingface.co/datasets/allenai/wildguardmix
+        - LMSYS-Chat-1M — https://huggingface.co/datasets/lmsys/lmsys-chat-1m
+        - (SafeDialBench is open — no terms required: https://huggingface.co/datasets/HongyeCao/SafeDialBench)
 
     4. Create an access token: Settings -> Access Tokens -> New Token
 
@@ -74,12 +80,18 @@ pip install -r requirements.txt
         huggingface-cli login   # paste your token when prompted
         ```
 
-    6. Download the files into the local directory
+    6. Download all three datasets. The simplest way is to run the script:
 
-        ```python 
+        ```bash
+        python scripts/download_datasets.py
+        ```
+
+        It runs the equivalent of:
+
+        ```python
         from huggingface_hub import snapshot_download
 
-        # Add WildGuardMix
+        # WildGuardMix
         snapshot_download(
         repo_id="allenai/wildguardmix",
         repo_type="dataset",
@@ -96,9 +108,7 @@ pip install -r requirements.txt
         repo_id="lmsys/lmsys-chat-1m",
         repo_type="dataset",
         local_dir="data/raw/lmsys-chat",)
-
         ```
-        * Of note, there is a script available at /scripts/download_datasets.py built to do this
 
 ## Notes
 
