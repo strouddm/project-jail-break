@@ -57,15 +57,18 @@ Never commit directly to main. Every feature or fix gets its own branch, gets re
 
     To learn more about pull requests, visit [this link.](https://github.blog/developer-skills/github/beginners-guide-to-github-creating-a-pull-request/)
 
-* After the PR is approved and merged, clean up locally
+* After the PR is approved and merged, clean up locally **and** on GitHub
 
 ```bash
     git checkout main
-    git pull
-    git branch -d <branch name>
+    git pull --prune
+    git branch -d <branch name>      # use -D if the PR was squash/rebase-merged and -d refuses
+    git push origin --delete <branch name>   # skip if the repo auto-deletes merged branches
 ```
 
-The final three commands switch back to main, pull down the newly merged changes, then `git branch -d` deletes the feature branch since its work is now in main. The `-d` flag stands for delete — it won't delete unless the branch has already been merged, so it's safe to run.
+These commands switch back to main, pull down the newly merged changes (`--prune` also drops local references to branches that were deleted on GitHub), then delete the feature branch locally and on the remote so it doesn't go stale.
+
+> **Note:** `git branch -d` only deletes branches it recognizes as merged. When a PR is merged via **Squash** or **Rebase**, the commits get new IDs, so `-d` won't recognize the branch and will refuse — use `-D` to force-delete once you've confirmed the PR merged. If the repo has GitHub's *"Automatically delete head branches"* setting enabled, the `git push origin --delete` step is handled for you on merge.
 
 ### Key Points
 
