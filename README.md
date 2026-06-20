@@ -12,13 +12,14 @@ Build a classifier to flag harmful / jailbreak-style prompts before they reach a
 proj-jail-break/
 ├── README.md            # project overview + data-download instructions
 ├── requirements.txt     # pandas, scikit-learn, etc.
-├── .gitignore           # ignores venv, caches, data/raw, data/processed, model artifacts (*.pkl/*.pt/*.bin)
+├── .gitignore           # ignores venv, caches, data contents, model artifacts (*.pkl/*.pt/*.bin) — keeps dirs via .gitkeep
 ├── data/
-│   ├── raw/             # gitignored — three empty dataset dirs staged:
+│   ├── raw/             # contents gitignored, dir tracked — three empty dataset dirs staged:
 │   │   ├── wildguardmix/    # ~92K single-turn prompts (primary, benign+harmful)
 │   │   ├── safedialbench/   # ~4K multi-turn attacks
-│   │   └── multibreak/      # ~10K adversarial jailbreaks
-│   └── processed/       # gitignored — unified/cleaned output
+│   │   └── lmsys-chat/      # ~1M real-world LLM conversations
+│   └── processed/       # contents gitignored, dir tracked — unified/cleaned output
+├── models/              # contents gitignored, dir tracked — trained model artifacts
 ├── notebooks/           # EDA + experiments (empty)
 ├── src/                 # flat Python modules: data prep, features, models, eval (empty)
 ├── scripts/             # runnable CLIs: download, train, evaluate (empty)
@@ -26,7 +27,7 @@ proj-jail-break/
     └── figures/         # plots & result artifacts (empty)
 ```
 
-Empty tracked directories get a `.gitkeep`: `notebooks/`, `src/`, `scripts/`, `reports/figures/`, `data/processed/`.
+Empty tracked directories get a `.gitkeep`: `notebooks/`, `src/`, `scripts/`, `reports/figures/`, `data/raw/`, `data/processed/`, and `models/`. For the gitignored dirs (`data/raw/`, `data/processed/`, `models/`), `.gitignore` ignores their *contents* (e.g. `data/raw/*`) while un-ignoring `.gitkeep`, so the directory structure travels with a clone but data/model files stay out of git.
 
 ---
 
@@ -35,7 +36,7 @@ Empty tracked directories get a `.gitkeep`: `notebooks/`, `src/`, `scripts/`, `r
 This project aggregates and standardizes data from three primary datasets to create a unified, multi-category classification resource:
 
 **WildGuardMix** ~92K single-turn prompts - Primary source; provides benign and harmful examples.
-**MultiBreak** ~10K adversarial prompts - Adversarial, jailbreak-style tactics. 
+**LMSYS-Chat-1M** ~1M real-world LLM conversations - Large-scale in-the-wild prompts (benign + unsafe).
 **SafeDialBench** ~4K multi-turn attacks - Multi-turn conversational threats.
 
 ---
@@ -90,11 +91,11 @@ pip install -r requirements.txt
         repo_type="dataset",
         local_dir="data/raw/safedialbench",)
 
-        # MultiBreak
+        # LMSYS-Chat-1M
         snapshot_download(
-        repo_id="microsoft/MultiBreak",
+        repo_id="lmsys/lmsys-chat-1m",
         repo_type="dataset",
-        local_dir="data/raw/multibreak",)
+        local_dir="data/raw/lmsys-chat",)
 
         ```
         * Of note, there is a script available at /scripts/download_datasets.py built to do this
@@ -108,6 +109,6 @@ The data lives in these directories (gitignored)
 data/raw/
 ├── wildguardmix/
 ├── safedialbench/
-└── multibreak/
+└── lmsys-chat/
 ```
 

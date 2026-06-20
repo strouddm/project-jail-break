@@ -11,15 +11,18 @@ venv/
 .venv/
 env/
 
-# Data
-data/raw/
-data/processed/
+# Data — ignore contents but keep the dirs tracked via .gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
 
-# Models and Artifacts
+# Models and Artifacts — ignore contents but keep the dir tracked via .gitkeep
 *.pkl
 *.pt
 *.bin
-models/
+models/*
+!models/.gitkeep
 
 # OS and IDE
 .DS_Store
