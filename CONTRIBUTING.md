@@ -40,7 +40,7 @@ Never commit directly to main. Every feature or fix gets its own branch, gets re
     git add <file>
     git commit -m "description"
 ```
-
+-d 
 * Push the branch to GitHub
 
 ```bash
