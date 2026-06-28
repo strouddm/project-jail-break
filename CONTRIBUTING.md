@@ -70,6 +70,14 @@ These commands switch back to main, pull down the newly merged changes (`--prune
 
 > **Note:** `git branch -d` only deletes branches it recognizes as merged. When a PR is merged via **Squash** or **Rebase**, the commits get new IDs, so `-d` won't recognize the branch and will refuse — use `-D` to force-delete once you've confirmed the PR merged. If the repo has GitHub's *"Automatically delete head branches"* setting enabled, the `git push origin --delete` step is handled for you on merge.
 
+One last tip: If you are looking to update your current branch with remote changes made to main, use the following code to keep your branch up-to-date (only do this if you're certain this will not create merge conflicts):
+
+```bash
+git fetch origin
+git checkout your-branch
+git merge origin/main
+```
+
 ### Key Points
 
 - Multiple people can work simultaneously on separate branches without interfering with each other.
