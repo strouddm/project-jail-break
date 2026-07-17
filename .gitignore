@@ -10,6 +10,7 @@ __pycache__/
 venv/
 .venv/
 env/
+.env
 
 # Data — ignore contents but keep the dirs tracked via .gitkeep
 data/raw/*
