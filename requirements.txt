@@ -12,3 +12,7 @@ ipykernel
 matplotlib
 seaborn
 pyprojroot
+
+# Embeddings
+sentence-transformers
+einops
