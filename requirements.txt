@@ -16,3 +16,7 @@ pyprojroot
 # Embeddings
 sentence-transformers
 einops
+
+# NLP
+nltk
+defusedxml
