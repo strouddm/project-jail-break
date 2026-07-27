@@ -41,7 +41,7 @@ print('Pre-processing the data...')
 safedial_proc = safedial.copy()
 
 # Adding turn column 
-safedial['turn'] = safedial['history'].apply(lambda x: len(x))
+safedial_proc['turn'] = safedial_proc['history'].apply(lambda x: len(x))
 
 # LMSYS processsing 
 
