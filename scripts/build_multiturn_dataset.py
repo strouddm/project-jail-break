@@ -9,6 +9,8 @@ import re
 print('Uploading the data...')
 
 # Uploading SafeDial (only harmful mutli-prompt examples)
+
+# Combine all .jsonl files into single dataset
 file_paths = glob.glob('../data/raw/safedialbench/data/by_task/english/*.jsonl')
 
 dfs = []
@@ -47,11 +49,16 @@ safedial_proc['turn'] = safedial_proc['history'].apply(lambda x: len(x))
 
 # Just English
 lmsys_proc = lmsys[(lmsys['language'] == 'English')]
+# Only considering multi-turn conversations
+lmsys_proc = lmsys_proc[lmsys_proc['turn'] > 1]
 
 # Did OpenAI moderation produce any flags at any point in the convo?
 lmsys_proc['any_flagged'] = lmsys_proc['openai_moderation'].apply(
     lambda turns: any(turn['flagged'] for turn in turns)
 )
+
+# Only considering posts not flagged by OpenAI moderation (will act as benign counterparts to SafeDial's harmful examples)
+lmsys_proc = lmsys_proc[lmsys_proc['any_flagged'] == False]
 
 # What categories was it flagged for?
 def flagged_categories(turns):
@@ -61,15 +68,14 @@ def flagged_categories(turns):
             cats.update(cat for cat, flagged in turn['categories'].items() if flagged)
     return list(cats)
 
+# Find flagged categories
 lmsys_proc['flagged_categories'] = lmsys_proc['openai_moderation'].apply(flagged_categories)
-
-# Only considering multi turn conversations
-lmsys_proc = lmsys_proc[lmsys_proc['turn'] > 1]
 
 # LMSYS redacts any names and replaces them with [NAME_X]
 # Code below replaces [NAME_X] with random names from a name dataset
 # This will avoid the model associating [NAME_X] with benign conversations (since only lmsys has this element)
 
+# Names dataset
 names = pd.read_csv('../data/processed/random_names.csv')
 name_prob_dict = dict(zip(names['Name'], names['Count']))
 
@@ -93,7 +99,7 @@ def replace_names(entry, name_prob_dict):
         result.append(new_msg)
     return result
 
-# Replace redactions
+# Replace redactions with names
 lmsys_proc['conversation_enriched'] = lmsys_proc.apply(
             lambda x: replace_names(x['conversation'], name_prob_dict) if x['redacted'] else x['conversation'],
             axis=1
@@ -125,7 +131,7 @@ def normalize_conversation(x):
             normalized.append({'role': 'user', 'content': turn['user']})
             normalized.append({'role': 'assistant', 'content': turn['bot']})
         else:
-            normalized.append(dict(turn))  # convert any remaining ndarray-backed dicts
+            normalized.append(dict(turn)) # convert any remaining ndarray-backed dicts
     
     return normalized
 
@@ -146,18 +152,22 @@ def conversation_length(conversation):
         return len(conversation)
     return 0
 
-# Plan to stratify benign sample from LMSYS by conversation length
-
 # Compute lengths 
 safedial_proc['conv_length'] = safedial_proc['history'].apply(conversation_length)
 lmsys_proc['conv_length'] = lmsys_proc['conversation_enriched'].apply(conversation_length)
+
+# Saving for EDA purposes
+safedial_proc.to_csv('../data/processed/safedial_processed.csv', index=False)
+lmsys_proc.to_csv('../data/processed/lmsys_processed.csv', index=False)
 
 # -------- BUILDING COMBINED MULTI-TURN DATASET -------- 
 
 print('Building combined multi-turn dataset...')
 
+# Will stratify benign sample from LMSYS by conversation length
+
 # Define bins based on harmful's distribution
-n_bins = 10
+n_bins = 20
 _, bin_edges = np.histogram(safedial_proc['conv_length'], bins=n_bins)
 
 # Expand left edge slightly to include minimum value
@@ -176,7 +186,7 @@ comparison = pd.DataFrame({
 
 SEED = 1234
 
-# Building benign sample, stratified by 10 conversation length bins
+# Building benign sample, stratified by 20 conversation length bins
 samples = []
 for interval, row in comparison.iterrows():
     n_needed = row['harmful_needed']
@@ -206,6 +216,7 @@ merged_data['conversation'] = merged_data['conversation'].apply(json.dumps)
 path = '../data/processed/safedial_enriched_with_benign.csv'
 print(f'Saving to {path}')
 
+# Save to path
 merged_data.to_csv(path, index=False)
 
 print('Done!')
