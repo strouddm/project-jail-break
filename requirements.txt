@@ -20,3 +20,8 @@ einops
 # NLP
 nltk
 defusedxml
+
+# Utilities
+python-dotenv
+kaggle
+regex

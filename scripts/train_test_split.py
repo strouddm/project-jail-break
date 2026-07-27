@@ -25,17 +25,20 @@ X_test_sing = pd.read_parquet('../data/raw/wildguardmix/test/wildguard_test.parq
 print('Preprocessing...')
 
 # Harmonize the conversation format for the single turn dataset with multi turn
-
 def build_conversation(df):
+    # Remove any rows with missing prompts
+    df = df.dropna(subset=['prompt'])
     df['conversation'] = df.apply(
         lambda row: [
             {'role': 'user', 'content': row['prompt']},
-            {'role': 'assistant', 'content': row['response']}
+            # If response is blank, just convert it to an empty string
+            {'role': 'assistant', 'content': row['response'] if pd.notna(row['response']) else ''}
         ],
         axis=1
     )
     return df
 
+# Apply harmonization
 X_train_sing = build_conversation(X_train_sing)
 X_test_sing = build_conversation(X_test_sing)
 
@@ -50,7 +53,7 @@ def conversation_to_text(conversation):
     return ' '.join(
         turn['content'] # exclude role entirely (trying to avoid issue of different turn distributions btwn SafeDial and LMSYS)
         for turn in conversation
-        if isinstance(turn.get('content'), str) # handle nan content
+        if isinstance(turn, dict)
     )
 
 # Remove punctuation and stopwords
@@ -74,8 +77,7 @@ def preprocessor(conversation):
 
     return proc_text_no_stopwords
 
-# Apply functions to preprocess
-
+# Apply functions to preprocess all datasets
 X_multi['conversation'] = X_multi['conversation'].apply(
     lambda x: preprocessor(conversation_to_text(x))
 )
@@ -86,6 +88,11 @@ X_test_sing['conversation'] = X_test_sing['conversation'].apply(
     lambda x: preprocessor(conversation_to_text(x))
 )
 
+# Drop rows where preprocessing produced an empty string
+X_multi = X_multi[X_multi['conversation'].str.strip() != '']
+X_train_sing = X_train_sing[X_train_sing['conversation'].str.strip() != '']
+X_test_sing = X_test_sing[X_test_sing['conversation'].str.strip() != '']
+
 # -------- TRAIN, TEST, VAL SPLIT --------
 
 print('Building train, test, and validation sets...')
@@ -94,24 +101,36 @@ print('Building train, test, and validation sets...')
 
 SEED = 1234
 
+# Shuffle dataset
 idx = X_multi.index.to_list()
 np.random.shuffle(idx)
-
 data_shuffled = X_multi.loc[idx].reset_index(drop=True)
 
 X = data_shuffled[['conversation_id', 'conversation']]
 y = data_shuffled[['harm']]
 
+# Train + test split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.20, random_state=SEED)
+    X, y, 
+    test_size=0.20, 
+    random_state=SEED,
+    stratify=y['harm'] # maintain class balance (dataset is already balanced 50-50)
+)
 
+
+# Train + val split
 X_train, X_val, y_train, y_val = train_test_split(
-    X_train, y_train, test_size=0.25, random_state=SEED)
+    X_train, y_train, 
+    test_size=0.25, 
+    random_state=SEED,
+    stratify=y_train['harm'] # maintain class balance (dataset is already balanced 50-50)
+)
 
 base_path = '../data/processed/'
 
 print(f'Saving datasets to {base_path}')
 
+# Save
 X_train.to_csv(f'{base_path}multiturn_X_train.csv', index=False)
 y_train.to_csv(f'{base_path}multiturn_Y_train.csv', index=False)
 X_test.to_csv(f'{base_path}multiturn_X_test.csv', index=False)
@@ -121,38 +140,53 @@ y_val.to_csv(f'{base_path}multiturn_Y_val.csv', index=False)
 
 # Train/ test/ validation for single-turn
 
-# Taking a sample to match the multi-turn dataset
-X_train_sing_sampled = X_train_sing.sample(len(X_train)+len(X_val), random_state=SEED)
-# Creating harmonized harm column
-X_train_sing_sampled['harm'] = np.where(X_train_sing_sampled['prompt_harm_label'] == 'harmful', True, False)
+# Creating harmonized harm column based on prompt_harm_label column
+X_train_sing['harm'] = np.where(X_train_sing['prompt_harm_label'] == 'harmful', True, False)
+# Taking a sample of train set to match the multi-turn dataset
+# Matching sample size to multi-turn dataset above
+sample_size = len(X_train)+len(X_val)
+# 50% harmful, 50% benign
+X_train_sing_sampled = pd.concat([
+    X_train_sing[X_train_sing['harm'] == True].sample(sample_size // 2 + sample_size % 2, random_state=SEED), # round up (uneven number)
+    X_train_sing[X_train_sing['harm'] == False].sample(sample_size // 2, random_state=SEED) # round down (uneven number)
+])
 # Create conversation_id
 X_train_sing_sampled['conversation_id'] = X_train_sing_sampled.reset_index().index
 
-# Taking a sample to match the multi-turn dataset
-X_test_sing_sampled = X_test_sing.sample(len(X_test), random_state=SEED)
-# Creating harmonized harm column
-X_test_sing_sampled['harm'] = np.where(X_test_sing_sampled['prompt_harm_label'] == 'harmful', True, False)
+# Creating harmonized harm column based on prompt_harm_label column
+X_test_sing['harm'] = np.where(X_test_sing['prompt_harm_label'] == 'harmful', True, False)
+# Taking a sample of test set to match the multi-turn dataset
+# Matching sample size to multi-turn dataset above
+sample_size = len(X_test)
+# 50% harmful, 50% benign
+X_test_sing_sampled = pd.concat([
+    X_test_sing[X_test_sing['harm'] == True].sample(sample_size // 2 + sample_size % 2, random_state=SEED), # round up (uneven number)
+    X_test_sing[X_test_sing['harm'] == False].sample(sample_size // 2, random_state=SEED) # round down (uneven number)
+])
 # Avoiding overlap in ID with train dataset
 X_test_sing_sampled['conversation_id'] = X_test_sing_sampled.index + len(X_train_sing_sampled)
 
+# Shuffle dataset
 idx = X_train_sing_sampled.index.to_list()
 np.random.shuffle(idx)
-
 data_shuffled = X_train_sing_sampled.loc[idx].reset_index(drop=True)
 
 X_train = data_shuffled[['conversation_id', 'conversation']]
 y_train = data_shuffled[['harm']]
 
+# Train + val split
 X_train, X_val, y_train, y_val = train_test_split(
     X_train, y_train,
     test_size=0.25, 
     random_state=SEED,
-    # stratify=X_train['adversarial'] # maintain class balance
+    stratify=y_train['harm'] # maintain class balance (dataset is already balanced 50-50)
 )
 
+# Test set aleady exists
 X_test = X_test_sing_sampled[['conversation_id', 'conversation']]
 y_test = X_test_sing_sampled[['harm']]
 
+# Save
 X_train.to_csv(f'{base_path}singleturn_X_train.csv', index=False)
 y_train.to_csv(f'{base_path}singleturn_Y_train.csv', index=False)
 X_test.to_csv(f'{base_path}singleturn_X_test.csv', index=False)
