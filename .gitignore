@@ -30,4 +30,8 @@ models/*
 .vscode/
 .idea/
 
+# Local-only milestone draft (kept off GitHub)
+reports/milestone_draft.md
+reports/milestone_draft.docx
+
 
