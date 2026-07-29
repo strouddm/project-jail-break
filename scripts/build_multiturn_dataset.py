@@ -4,6 +4,10 @@ import json
 import numpy as np
 import re
 
+# For reproducibility
+SEED = 1234
+np.random.seed(SEED)
+
 # -------- UPLOADING THE DATA -------- 
 
 print('Uploading the data...')
@@ -183,8 +187,6 @@ comparison = pd.DataFrame({
     'harmful_needed': harmful_bin_counts,
     'benign_available': benign_bin_counts
 }).fillna(0).astype(int)
-
-SEED = 1234
 
 # Building benign sample, stratified by 20 conversation length bins
 samples = []
