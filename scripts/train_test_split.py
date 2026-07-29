@@ -8,6 +8,10 @@ import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 
+# For reproducibility
+SEED = 1234
+np.random.seed(SEED)
+
 # -------- UPLOADING THE DATA -------- 
 
 print('Uploading the data...')
@@ -98,8 +102,6 @@ X_test_sing = X_test_sing[X_test_sing['conversation'].str.strip() != '']
 print('Building train, test, and validation sets...')
 
 # Train/ test/ validation for multi-turn
-
-SEED = 1234
 
 # Shuffle dataset
 idx = X_multi.index.to_list()
