@@ -15,7 +15,7 @@ print('Uploading the data...')
 # Uploading SafeDial (only harmful mutli-prompt examples)
 
 # Combine all .jsonl files into single dataset
-file_paths = glob.glob('../data/raw/safedialbench/data/by_task/english/*.jsonl')
+file_paths = glob.glob('../data/raw/safedialbench/datasets_en.jsonl')
 
 dfs = []
 for path in file_paths:
