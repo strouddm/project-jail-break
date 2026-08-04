@@ -1,27 +1,33 @@
+# Core
 pandas
+numpy
 pyarrow
+
+# ML
 scikit-learn
 xgboost
-transformers
 torch
+tensorflow
+
+# NLP / Embeddings
+transformers
 datasets
 huggingface_hub
-
-# EDA / notebooks
-ipykernel
-matplotlib
-seaborn
-pyprojroot
-
-# Embeddings
 sentence-transformers
 einops
-
-# NLP
 nltk
 defusedxml
+regex
 
-# Utilities
+# Viz
+matplotlib
+seaborn
+
+# Notebooks
+ipykernel
+
+# Utils
 python-dotenv
 kaggle
-regex
+pyprojroot
+tqdm
