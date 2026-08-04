@@ -1,16 +1,22 @@
 from huggingface_hub import snapshot_download
+from pyprojroot import here
+
+# Absolute paths anchored to repo root
+REPO_ROOT = here()
+RAW_DATA_DIR = REPO_ROOT / 'data' / 'raw'
 
 
 snapshot_download(repo_id="allenai/wildguardmix",
                   repo_type="dataset",
-                  local_dir="data/raw/wildguardmix",)
+                  local_dir=RAW_DATA_DIR / "wildguardmix",)
 
-# SafeDialBench
-snapshot_download(repo_id="HongyeCao/SafeDialBench",
-                  repo_type="dataset",
-                  local_dir="data/raw/safedialbench",)
+# Not using anymore 
+# # SafeDialBench
+# snapshot_download(repo_id="HongyeCao/SafeDialBench",
+#                   repo_type="dataset",
+#                   local_dir=RAW_DATA_DIR / "safedialbench",)
 
 # LMSYS-Chat-1M
 snapshot_download(repo_id="lmsys/lmsys-chat-1m",
                   repo_type="dataset",
-                  local_dir="data/raw/lmsys-chat",)
+                  local_dir=RAW_DATA_DIR / "lmsys-chat",)
