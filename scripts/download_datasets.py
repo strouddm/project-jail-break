@@ -10,12 +10,6 @@ snapshot_download(repo_id="allenai/wildguardmix",
                   repo_type="dataset",
                   local_dir=RAW_DATA_DIR / "wildguardmix",)
 
-# Not using anymore 
-# # SafeDialBench
-# snapshot_download(repo_id="HongyeCao/SafeDialBench",
-#                   repo_type="dataset",
-#                   local_dir=RAW_DATA_DIR / "safedialbench",)
-
 # LMSYS-Chat-1M
 snapshot_download(repo_id="lmsys/lmsys-chat-1m",
                   repo_type="dataset",
