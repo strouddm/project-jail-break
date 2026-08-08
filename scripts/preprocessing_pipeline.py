@@ -4,10 +4,16 @@ import glob
 import json
 import re
 from sklearn.model_selection import train_test_split
+from pyprojroot import here
 
 # For reproducibility
 SEED = 1234
 np.random.seed(SEED)
+
+# Absolute paths anchored to repo root
+REPO_ROOT = here()
+RAW_DATA_DIR = REPO_ROOT / 'data' / 'raw'
+PROCESSED_DATA_DIR = REPO_ROOT / 'data' / 'processed'
 
 #### SINGLE-TURN DATASET PREPROCESSING ####
 
@@ -17,8 +23,8 @@ print('Preprocessing single-turn datasets...')
 # WildGuardMix already has train/ test split
 
 # Uploading
-singleturn_train = pd.read_parquet('../data/raw/wildguardmix/train/wildguard_train.parquet')
-singleturn_test = pd.read_parquet('../data/raw/wildguardmix/test/wildguard_test.parquet')
+singleturn_train = pd.read_parquet(RAW_DATA_DIR / 'wildguardmix' / 'train' / 'wildguard_train.parquet')
+singleturn_test = pd.read_parquet(RAW_DATA_DIR / 'wildguardmix' / 'test' / 'wildguard_test.parquet')
 
 # Remove duplicate prompts
 singleturn_train = singleturn_train.drop_duplicates(subset=['prompt'])
@@ -65,6 +71,13 @@ def conversation_length(conversation):
 singleturn_train['conv_length'] = singleturn_train['conversation'].apply(conversation_length)
 singleturn_test['conv_length'] = singleturn_test['conversation'].apply(conversation_length)
 
+# Create conversation_id
+singleturn_train.insert(0, 'conversation_id', singleturn_train.index)
+# singleturn_train['conversation_id'] = singleturn_train.index
+# Avoiding overlap in ID with train dataset
+singleturn_test.insert(0, 'conversation_id', singleturn_test.index + len(singleturn_train))
+# singleturn_test['conversation_id'] = singleturn_test.index + len(singleturn_train)
+
 #### MULTI-TURN DATASET PREPROCESSING ####
 
 print('Preprocessing multi-turn dataset...')
@@ -74,7 +87,7 @@ print('Preprocessing multi-turn dataset...')
 # As a generalizability test, the model trained on WildGuardMix's single-turn conversations will be tested on longer conversations from a novel dataset
 
 # Compile all LMSYS files
-file_paths = glob.glob('../data/raw/lmsys-chat/data/*.parquet')
+file_paths = glob.glob(str(RAW_DATA_DIR / 'lmsys-chat' / 'data' / '*.parquet'))
 dfs = [pd.read_parquet(f, engine='pyarrow') for f in sorted(file_paths)]
 lmsys = pd.concat(dfs).reset_index().drop(columns=['index'])
 
@@ -142,7 +155,8 @@ lmsys_proc['conversation'] = lmsys_proc['conversation_orig'].apply(normalize_con
 # Code below replaces [NAME_X] with random names from a name dataset
 
 # Names dataset
-names = pd.read_csv('../data/processed/random_names.csv')
+
+names = pd.read_csv(PROCESSED_DATA_DIR / 'random_names.csv')
 name_prob_dict = dict(zip(names['Name'], names['Count']))
 
 def replace_names(entry, name_prob_dict):
@@ -261,16 +275,16 @@ multiturn['conversation'] = multiturn['conversation'].apply(json.dumps)
 multiturn['flagged_categories'] = multiturn['flagged_categories'].apply(json.dumps)
 
 # Save full multi-turn sample to path
-path = '../data/processed/lmsys_multiturn_sample_full.csv'
+path = PROCESSED_DATA_DIR / 'lmsys_multiturn_sample_full.csv'
 multiturn.to_csv(path, index=False)
 print(f'Saving full multi-turn sample (for EDA) to {path}')
 
 # Save full single-turn datasets to paths
-path = '../data/processed/wildguardmix_singleturn_train_sample_full.csv'
+path = PROCESSED_DATA_DIR / 'wildguardmix_singleturn_train_sample_full.csv'
 singleturn_train.to_csv(path, index=False)
 print(f'Saving full single-turn train sample (for EDA) to {path}')
-path = '../data/processed/wildguardmix_singleturn_test_sample_full.csv'
-multiturn.to_csv(path, index=False)
+path = PROCESSED_DATA_DIR / 'wildguardmix_singleturn_test_sample_full.csv'
+singleturn_test.to_csv(path, index=False)
 print(f'Saving full single-turn test sample (for EDA) to {path}')
 
 ### TRAIN, TEST, VAL SPLIT ###
@@ -278,11 +292,6 @@ print(f'Saving full single-turn test sample (for EDA) to {path}')
 # Polished train/ test/ validation for single-turn
 
 print(f'Building polished single-turn train, test, and validation sets...')
-
-# Create conversation_id
-singleturn_train['conversation_id'] = singleturn_train.index
-# Avoiding overlap in ID with train dataset
-singleturn_test['conversation_id'] = singleturn_test.index + len(singleturn_train)
 
 # Shuffle dataset
 idx = singleturn_train.index.to_list()
@@ -310,17 +319,17 @@ data_shuffled = singleturn_test.loc[idx].reset_index(drop=True)
 X_test = data_shuffled[['conversation_id', 'conversation', 'conversation_proc']]
 y_test = data_shuffled[['conversation_id', 'harm']]
 
-base_path = '../data/processed/'
+base_path = PROCESSED_DATA_DIR 
 
 print(f'Saving polished single-turn datasets (for analysis) to {base_path} folder')
 
 # Save
-X_train.to_csv(f'{base_path}singleturn_X_train.csv', index=False)
-y_train.to_csv(f'{base_path}singleturn_Y_train.csv', index=False)
-X_test.to_csv(f'{base_path}singleturn_X_test.csv', index=False)
-y_test.to_csv(f'{base_path}singleturn_Y_test.csv', index=False)
-X_val.to_csv(f'{base_path}singleturn_X_val.csv', index=False)
-y_val.to_csv(f'{base_path}singleturn_Y_val.csv', index=False)
+X_train.to_csv(base_path / 'singleturn_X_train.csv', index=False)
+y_train.to_csv(base_path / 'singleturn_Y_train.csv', index=False)
+X_test.to_csv(base_path / 'singleturn_X_test.csv', index=False)
+y_test.to_csv(base_path / 'singleturn_Y_test.csv', index=False)
+X_val.to_csv(base_path / 'singleturn_X_val.csv', index=False)
+y_val.to_csv(base_path / 'singleturn_Y_val.csv', index=False)
 
 # Now building polished multi-turn extension test set 
 
@@ -337,7 +346,7 @@ y = data_shuffled[['conversation_id', 'harm']]
 print(f'Saving polished multi-turn test datasets (for analysis) to {base_path} folder')
 
 # Save
-X.to_csv(f'{base_path}multiturn_X_test.csv', index=False)
-y.to_csv(f'{base_path}multiturn_Y_test.csv', index=False)
+X.to_csv(PROCESSED_DATA_DIR / 'multiturn_X_test.csv', index=False)
+y.to_csv(PROCESSED_DATA_DIR / 'multiturn_Y_test.csv', index=False)
 
 print('Done!')
