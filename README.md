@@ -2,42 +2,36 @@
 
 ## Goal
 
-Build a classifier to flag harmful / jailbreak-style prompts before they reach an LLM, comparing classical ML (Logistic Regression, XGBoost) against a transformer-based classifier using contextual embeddings.
+Build a classifier to flag harmful / jailbreak-style prompts before they reach an LLM, comparing classical ML (Logistic Regression, FFNN) against a transformer-based classifier.
 
 ---
 
 ## Directory Structure
 
-```
 proj-jail-break/
-├── README.md            # project overview + data-download instructions
-├── requirements.txt     # pandas, scikit-learn, etc.
-├── .gitignore           # ignores venv, caches, data contents, model artifacts (*.pkl/*.pt/*.bin) — keeps dirs via .gitkeep
+├── README.md                        # project overview + setup instructions
+├── CONTRIBUTING.md                  # contribution guidelines
+├── requirements.txt                 # python dependencies
+├── .gitignore                       # excludes venv, data contents, model artifacts
 ├── data/
-│   ├── raw/             # contents gitignored, dir tracked — three empty dataset dirs staged:
-│   │   ├── wildguardmix/    # ~92K single-turn prompts (primary, benign+harmful)
-│   │   ├── safedialbench/   # ~4K multi-turn attacks
-│   │   └── lmsys-chat/      # ~1M real-world LLM conversations
-│   └── processed/       # contents gitignored, dir tracked — unified/cleaned output
-├── models/              # contents gitignored, dir tracked — trained model artifacts
-├── notebooks/           # EDA + experiments (empty)
-├── src/                 # flat Python modules: data prep, features, models, eval (empty)
-├── scripts/             # runnable CLIs: download, train, evaluate (empty)
-└── reports/
-    └── figures/         # plots & result artifacts (empty)
-```
+│   ├── processed/                   # cleaned/unified datasets (gitignored contents)
+│   └── raw/                         # original downloaded datasets (gitignored contents)
+│       ├── wildguardmix/            # ~92K single-turn prompts (benign + harmful)
+│       └── lmsys-chat/              # ~1M real-world LLM conversations
+├── notebooks/                       # EDA + model experiments (per-contributor)
+├── reports/                         # presentation deck + figures
+└── scripts/                         # data download + preprocessing pipelines
 
-Empty tracked directories get a `.gitkeep`: `notebooks/`, `src/`, `scripts/`, `reports/figures/`, `data/raw/`, `data/processed/`, and `models/`. For the gitignored dirs (`data/raw/`, `data/processed/`, `models/`), `.gitignore` ignores their *contents* (e.g. `data/raw/*`) while un-ignoring `.gitkeep`, so the directory structure travels with a clone but data/model files stay out of git.
+Empty tracked directories get a `.gitkeep`. For the gitignored dirs (`data/raw/`, `data/processed/`), `.gitignore` ignores their *contents* (e.g. `data/raw/*`) while un-ignoring `.gitkeep`, so the directory structure travels with a clone but data/processed files stay out of git.
 
 ---
 
 ## Data Sources
 
-This project aggregates and standardizes data from three primary datasets to create a unified, multi-category classification resource:
+This project aggregates and standardizes data from two primary datasets to create a unified, multi-category classification resource:
 
 **WildGuardMix** ~92K single-turn prompts - Primary source; provides benign and harmful examples.
 **LMSYS-Chat-1M** ~1M real-world LLM conversations - Large-scale in-the-wild prompts (benign + unsafe).
-**SafeDialBench** ~4K multi-turn attacks - Multi-turn conversational threats.
 
 ---
 
@@ -60,7 +54,7 @@ pip install -r requirements.txt
 
 3. Download the datasets into `data/raw/`
 
-    All three datasets download in a single step. Two of them are **gated** on Hugging Face, so you must accept their terms (while logged in) before your token can pull them. Access is granted automatically — there's no approval wait.
+    Both datasets download in a single step. They are **gated** on Hugging Face, so you must accept their terms (while logged in) before your token can pull them. Access is granted automatically — there's no approval wait.
 
     1. Install prerequisites: `pip install datasets huggingface_hub`
 
@@ -70,7 +64,6 @@ pip install -r requirements.txt
 
         - WildGuardMix — https://huggingface.co/datasets/allenai/wildguardmix
         - LMSYS-Chat-1M — https://huggingface.co/datasets/lmsys/lmsys-chat-1m
-        - (SafeDialBench is open — no terms required: https://huggingface.co/datasets/HongyeCao/SafeDialBench)
 
     4. Create an access token: Settings -> Access Tokens -> New Token
 
@@ -80,7 +73,7 @@ pip install -r requirements.txt
         huggingface-cli login   # paste your token when prompted
         ```
 
-    6. Download all three datasets. The simplest way is to run the script:
+    6. Download both datasets. The simplest way is to run the script:
 
         ```bash
         python scripts/download_datasets.py
@@ -97,12 +90,6 @@ pip install -r requirements.txt
         repo_type="dataset",
         local_dir="data/raw/wildguardmix",)
 
-        # SafeDialBench
-        snapshot_download(
-        repo_id="HongyeCao/SafeDialBench",
-        repo_type="dataset",
-        local_dir="data/raw/safedialbench",)
-
         # LMSYS-Chat-1M
         snapshot_download(
         repo_id="lmsys/lmsys-chat-1m",
@@ -118,7 +105,6 @@ The data lives in these directories (gitignored)
 ```
 data/raw/
 ├── wildguardmix/
-├── safedialbench/
 └── lmsys-chat/
 ```
 
